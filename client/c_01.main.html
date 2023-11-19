@@ -1,0 +1,42 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript" src="https://unpkg.com/vue@next"></script>
+</head>
+    
+<body>
+    <h1>購物車(客戶)</h1>
+    <hr/>
+    <div id="main">
+        <div id="list" v-if="UI=='main'">
+            <h1>可購物清單</h1>
+            <table border=1>
+                <tr><td>商品名稱</td><td>單價</td><td>文字說明</td><td>購物車內數量</td><td>-</td></tr>
+                <tr v-for="job in dat">
+                    <td>{{job.id}}</td>
+                    <td>{{job.jobName}}</td>
+                    <td>{{job.jobUrgent}}</td>
+                    <td>{{job.jobContent}}</td>
+                    <td><button @click="">加入購物車</button> <button @click="">移除購物車</button></td>
+                </tr>
+            </table>
+        </div>
+
+        <div v-if="UI=='check'">
+            <h1>購物車內容</h1>
+            <table border=1>
+                <tr><td>商品名稱</td><td>單價</td><td>文字說明</td><td>購物車內數量</td><td>-</td></tr>
+                <tr v-for="job in dat">
+                    <td>{{job.id}}</td>
+                    <td>{{job.jobName}}</td>
+                    <td>{{job.jobUrgent}}</td>
+                    <td>{{job.jobContent}}</td>
+                    <td><button @click="">加入購物車</button><button @click="">移除購物車</button></td>
+                </tr>
+            </table>
+            總價格:
+        </div>
+    </div>
+    
+</body>
+</html>

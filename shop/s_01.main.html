@@ -1,0 +1,34 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript" src="https://unpkg.com/vue@next"></script>
+</head>
+    
+<body>
+    <h1>購物車(商家)</h1>
+    <hr/>
+    <div id="main">
+        <div id="list" v-if="UI=='main'">
+            <h1>可購物清單</h1>
+            <button @click="">新增商品</button>
+            <table border=1>
+                <tr><td>商品序號</td><td>商品名稱</td><td>單價</td><td>文字說明</td><td>-</td></tr>
+                <tr v-for="job in dat">
+                    <td>{{job.id}}</td>
+                    <td>{{job.jobName}}</td>
+                    <td>{{job.jobUrgent}}</td>
+                    <td>{{job.jobContent}}</td>
+                    <td><button @click="delGood()">刪除商品</button> <button @click="editGood()">更改商品資訊</button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div v-if="UI=='newGood'">
+        商品名稱: <input type="text"  v-model="newGood.goodName"/> <br/>
+        商品單價: <input type="text"  v-model="newGood.goodPrice"/> <br/>
+        商品說明: <textarea v-model="newGood.goodContent"></textarea><br>
+    
+        <input type='button' @click="addGood()" value="save">
+    </div>
+</body>
+</html>
