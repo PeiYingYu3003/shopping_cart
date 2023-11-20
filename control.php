@@ -6,14 +6,14 @@ switch ($act) {
 	case "get_GoodsList":
 		$Goods = get_GoodList();
 		echo json_encode($Goods);
-		return;  
+		return;
 	
 	case "add_Good":
 		$GoodName = $_POST['name']; //$_GET, $_REQUEST
 		$GoodPrice = $_POST['price'];
 		$GoodContent = $_POST['content'];
 		//verify
-		addGood($GoodName,$GoodUrgent,$GoodContent);
+		addGood($GoodName,$GoodPrice,$GoodContent);
 		return;
 	
 	case "del_Good":
