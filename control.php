@@ -13,7 +13,7 @@ switch ($act) {
 		$GoodPrice = $_POST['price'];
 		$GoodContent = $_POST['content'];
 		//verify
-		addGood($GoodName,$GoodPrice,$GoodContent);
+		add_Good($GoodName,$GoodPrice,$GoodContent);
 		return;
 	
 	case "del_Good":
