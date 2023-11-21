@@ -65,16 +65,6 @@ function get_CartList() {
 function add_Cart($goodID, $goodNum) {
     global $db;
 
-    $sql = "insert into carts (goodID, goodNum) values (?, ?)";
-    $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "ii", $goodID, $goodNum);
-    mysqli_stmt_execute($stmt);
-
-    return true;
-}
-function add_Cart($goodID, $goodNum) {
-    global $db;
-
     $nowNum = checkCart($goodID);
 
     if ($existingItem) {
