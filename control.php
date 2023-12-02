@@ -52,3 +52,25 @@ switch ($act) {
 }
 
 ?>
+// 在需要授權的地方，檢查用戶是否已經登錄
+if (!isUserLoggedIn()) {
+    // 未登錄，進行適當處理，例如跳轉到登錄頁面
+    header("Location: login.php");
+    exit();
+}
+
+// 檢查用戶是否擁有訪問商家資源的權限
+if (!userHasPermission('access_merchant_resources')) {
+    // 未授權，返回錯誤或顯示相應的訊息
+    echo json_encode(['error' => 'Permission denied']);
+    exit();
+}
+//通知狀態 查詢網路資料後加上的
+//在訂單狀態更新時，發送通知給用戶
+function sendOrderStatusNotification($userId, $orderId, $newStatus) {
+    // 實現通知的邏輯，可以使用電子郵件、簡訊、推送通知等方式
+    // ...
+}
+
+// 調用通知函式
+sendOrderStatusNotification($userId, $orderId, $newStatus);
