@@ -40,6 +40,51 @@ function del_Good($id) {
 	return True;
 }
 
+//確認訂單
+function confirm_OrderList($shopID){
+	global $db;
+	$sql = "select * from orders where shopID=? and status='未處理';";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $shopID);
+	mysqli_stmt_execute($stmt); //執行SQL
+	$result = mysqli_stmt_get_result($stmt); //取得查詢結果
+
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; //將此筆資料新增到陣列中
+	}
+	return $rows;
+}
+function confirm_Order($orderID){
+	global $db;
+	$sql = "update orders set status='處理中' where orderID=?;";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $orderID);
+	mysqli_stmt_execute($stmt); 
+}
+//包裝出貨
+function transmit_OrderList($shopID){
+	global $db;
+	$sql = "select * from orders where shopID=? and status='處理中';";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $shopID);
+	mysqli_stmt_execute($stmt); //執行SQL
+	$result = mysqli_stmt_get_result($stmt); //取得查詢結果
+
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; //將此筆資料新增到陣列中
+	}
+	return $rows;
+}
+function transmit_Order($orderID){
+	global $db;
+	$sql = "update orders set status='寄送中' where orderID=?;";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $orderID);
+	mysqli_stmt_execute($stmt); 
+}
+
 //客戶功能
 function get_CartList($clientID) {
 	global $db;
@@ -58,6 +103,7 @@ function get_CartList($clientID) {
 	}
 	return $rows;
 }
+
 function checkNum($clientID,$goodID){
     global $db;
     $sql = "select * from carts where clientID=? and goodID=?";
@@ -75,6 +121,7 @@ function checkNum($clientID,$goodID){
         return -1;  // 沒有符合條件的資料
     }
 }
+
 function add_Cart($goodID) {
     global $db;
     $clientID = 101;
@@ -98,7 +145,6 @@ function add_Cart($goodID) {
 
     return true;
 }
-
 
 function del_Cart($goodID) {
     global $db;
@@ -136,4 +182,105 @@ function get_Total() {
     return $row['total']; //確保不會抓到其他值
 }
 
+//送出訂單
+function send_Order($clientID){
+    global $db;
+
+    $cartList = get_CartList($clientID);
+    $shopID = 201;
+    $cartText = '';
+    foreach ($cartList as $cartItem) {
+        $cartText .= "Good: {$cartItem['goodName']}, Num: {$cartItem['goodNum']}, Price: {$cartItem['goodPrice']}\n";
+    }
+    $sql = "insert into orders (shopID, clientID, context) values (?, ?, ?)";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "iis", $shopID, $clientID, $cartText);
+    mysqli_stmt_execute($stmt);
+
+    // 清除購物車
+    $sql = "delete form carts where clientID = ?";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $clientID);
+    mysqli_stmt_execute($stmt);
+}
+
+//查看訂單
+function get_OrderList($clientID){
+	global $db;
+	$sql = "select * from orders where clientID=?;";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $clientID);
+	mysqli_stmt_execute($stmt); //執行SQL
+	$result = mysqli_stmt_get_result($stmt); //取得查詢結果
+
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; //將此筆資料新增到陣列中
+	}
+	return $rows;
+}
+
+//收到並評價訂單
+function finish_OrderList($clientID){
+	global $db;
+	$sql = "select * from orders where status='已寄送' and clientID=?;";
+	$stmt = mysqli_prepare($db, $sql);
+	mysqli_stmt_bind_param($stmt, "i", $clientID);
+	$result = mysqli_stmt_get_result($stmt); /
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; 
+	}
+	return $rows;
+}
+function finish_Order($satisfaction,$orderID){ 
+	global $db;
+	$sql = "update orders set satisfaction=? where orderID=?;";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "si", $satisfaction, $orderID);
+	mysqli_stmt_execute($stmt); 
+}
+
+//物流功能
+//已寄送
+function deal_OrderList(){
+	global $db;
+	$sql = "select * from orders where status='寄送中';";
+	$stmt = mysqli_prepare($db, $sql);
+	mysqli_stmt_execute($stmt); 
+	$result = mysqli_stmt_get_result($stmt); /
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; 
+	}
+	return $rows;
+}
+function deal_Order($orderID){ 
+	global $db;
+	$sql = "update orders set status='已寄送' where orderID=?;";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $orderID);
+	mysqli_stmt_execute($stmt); 
+}
+
+//已送達
+function deal_OrderList(){
+	global $db;
+	$sql = "select * from orders where satisfaction!='';"; //評價不為空
+	$stmt = mysqli_prepare($db, $sql);
+	mysqli_stmt_execute($stmt); 
+	$result = mysqli_stmt_get_result($stmt);
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; 
+	}
+	return $rows;
+}
+function deal_Order($orderID){ 
+	global $db;
+	$sql = "update orders set status='已送達' where orderID=?;";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $orderID);
+	mysqli_stmt_execute($stmt); 
+}
 ?>
