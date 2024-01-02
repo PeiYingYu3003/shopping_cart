@@ -198,7 +198,7 @@ function send_Order($clientID){
     mysqli_stmt_execute($stmt);
 
     // 清除購物車
-    $sql = "delete form carts where clientID = ?";
+    $sql = "delete from carts where clientID = ?";
     $stmt = mysqli_prepare($db, $sql);
     mysqli_stmt_bind_param($stmt, "i", $clientID);
     mysqli_stmt_execute($stmt);
@@ -226,7 +226,7 @@ function finish_OrderList($clientID){
 	$sql = "select * from orders where status='已寄送' and clientID=?;";
 	$stmt = mysqli_prepare($db, $sql);
 	mysqli_stmt_bind_param($stmt, "i", $clientID);
-	$result = mysqli_stmt_get_result($stmt); /
+	$result = mysqli_stmt_get_result($stmt); 
 	$rows = array();
 	while($r = mysqli_fetch_assoc($result)) {
 		$rows[] = $r; 
@@ -243,19 +243,19 @@ function finish_Order($satisfaction,$orderID){
 
 //物流功能
 //已寄送
-function deal_OrderList(){
+function deal_Deliver(){
 	global $db;
 	$sql = "select * from orders where status='寄送中';";
 	$stmt = mysqli_prepare($db, $sql);
 	mysqli_stmt_execute($stmt); 
-	$result = mysqli_stmt_get_result($stmt); /
+	$result = mysqli_stmt_get_result($stmt); 
 	$rows = array();
 	while($r = mysqli_fetch_assoc($result)) {
 		$rows[] = $r; 
 	}
 	return $rows;
 }
-function deal_Order($orderID){ 
+function check_Deliver($orderID){ 
 	global $db;
 	$sql = "update orders set status='已寄送' where orderID=?;";
 	$stmt = mysqli_prepare($db, $sql); 
@@ -264,7 +264,7 @@ function deal_Order($orderID){
 }
 
 //已送達
-function deal_OrderList(){
+function deal_Star(){
 	global $db;
 	$sql = "select * from orders where satisfaction!='';"; //評價不為空
 	$stmt = mysqli_prepare($db, $sql);
@@ -276,7 +276,7 @@ function deal_OrderList(){
 	}
 	return $rows;
 }
-function deal_Order($orderID){ 
+function check_Order($orderID){ 
 	global $db;
 	$sql = "update orders set status='已送達' where orderID=?;";
 	$stmt = mysqli_prepare($db, $sql); 

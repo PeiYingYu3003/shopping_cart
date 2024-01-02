@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2023-11-26 04:22:27
+-- 產生時間： 2024-01-02 19:29:36
 -- 伺服器版本： 10.4.28-MariaDB
--- PHP 版本： 8.0.28
+-- PHP 版本： 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,45 +24,35 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 資料表結構 `carts`
+-- 資料表結構 `user`
 --
 
-CREATE TABLE `carts` (
-  `dataID` int(11) NOT NULL,
-  `clientID` int(11) DEFAULT NULL,
-  `goodID` int(11) DEFAULT NULL,
-  `goodNum` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- 傾印資料表的資料 `carts`
---
-
-INSERT INTO `carts` (`dataID`, `clientID`, `goodID`, `goodNum`) VALUES
-(8, 101, 13, 15),
-(15, 101, 18, 8),
-(18, 101, 14, 7),
-(22, 101, 22, 1);
+CREATE TABLE `user` (
+  `userID` int(10) NOT NULL,
+  `account` varchar(20) NOT NULL,
+  `password` varchar(60) NOT NULL,
+  `role` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- 已傾印資料表的索引
 --
 
 --
--- 資料表索引 `carts`
+-- 資料表索引 `user`
 --
-ALTER TABLE `carts`
-  ADD PRIMARY KEY (`dataID`);
+ALTER TABLE `user`
+  ADD PRIMARY KEY (`userID`);
 
 --
 -- 在傾印的資料表使用自動遞增(AUTO_INCREMENT)
 --
 
 --
--- 使用資料表自動遞增(AUTO_INCREMENT) `carts`
+-- 使用資料表自動遞增(AUTO_INCREMENT) `user`
 --
-ALTER TABLE `carts`
-  MODIFY `dataID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+ALTER TABLE `user`
+  MODIFY `userID` int(10) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

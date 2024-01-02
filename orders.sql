@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2024-01-02 19:29:27
+-- 產生時間： 2024-01-02 19:29:30
 -- 伺服器版本： 10.4.28-MariaDB
 -- PHP 版本： 8.2.4
 
@@ -24,16 +24,15 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 資料表結構 `goods`
+-- 資料表結構 `orders`
 --
 
-CREATE TABLE `goods` (
-  `goodID` int(10) NOT NULL,
+CREATE TABLE `orders` (
+  `orderID` int(10) NOT NULL,
+  `clientID` int(10) NOT NULL,
   `shopID` int(10) NOT NULL,
-  `goodName` text NOT NULL,
-  `goodPrice` int(10) NOT NULL,
-  `goodContent` text NOT NULL,
-  `goodNum` int(5) NOT NULL
+  `orderStatus` int(1) NOT NULL,
+  `deliverID` int(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -41,20 +40,20 @@ CREATE TABLE `goods` (
 --
 
 --
--- 資料表索引 `goods`
+-- 資料表索引 `orders`
 --
-ALTER TABLE `goods`
-  ADD PRIMARY KEY (`goodID`);
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`orderID`);
 
 --
 -- 在傾印的資料表使用自動遞增(AUTO_INCREMENT)
 --
 
 --
--- 使用資料表自動遞增(AUTO_INCREMENT) `goods`
+-- 使用資料表自動遞增(AUTO_INCREMENT) `orders`
 --
-ALTER TABLE `goods`
-  MODIFY `goodID` int(10) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `orders`
+  MODIFY `orderID` int(10) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
