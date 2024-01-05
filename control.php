@@ -129,17 +129,16 @@ switch ($act) {
 // 引入資料庫設定檔案
 require('dbconfig.php');
 
-// 創建 orders 資料表
-$sql = "CREATE TABLE IF NOT EXISTS `orders` (
+CREATE TABLE IF NOT EXISTS `orders` (
   `orderID` int(10) NOT NULL AUTO_INCREMENT,
   `clientID` int(10) NOT NULL,
   `shopID` int(10) NOT NULL,
   `orderStatus` int(2) NOT NULL, -- 修改為 int(2)
-  `deliverID` int(10) NOT NULL DEFAULT 0, -- 修改為 int(10)
+  `deliverID` int(10) DEFAULT 0 NOT NULL, -- 修改為 int(10) 並調整預設值位置
   PRIMARY KEY (`orderID`),
   FOREIGN KEY (`clientID`) REFERENCES `clients` (`clientID`),
   FOREIGN KEY (`shopID`) REFERENCES `shops` (`shopID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 // 執行 SQL 
 if (mysqli_query($db, $sql)) {
