@@ -1,70 +1,61 @@
 <?php
+// index.php
+
 require('model.php');
+
 $act = $_REQUEST['act'];
 
 switch ($act) {
-    // ***********************
-    // 商家可用功能
-    // ***********************
-    case "GoodsList": // 取得所有商品列表
-        $Goods = get_GoodList();
-        echo json_encode($Goods);
-        return;
+    case "GoodsList":
+        getGoodsList();
+        break;
 
-    case "addGood": // 新增商品
-        $jsonStr = $_POST['dat'];
-        $good = json_decode($jsonStr);
-        try {
-            $insertedID = add_Good($good->goodID, $good->goodName, $good->goodPrice, $good->goodContent);
-            echo json_encode(["success" => true, "insertedID" => $insertedID]);
-        } catch (Exception $e) {
-            echo json_encode(["success" => false, "error" => $e->getMessage()]);
-        }
-        return;
+    case "addGood":
+        addGood();
+        break;
 
-    case "delGood": // 刪除商品
-        $id = (int)$_REQUEST['id'];
-        del_Good($id);
-        return;
+    case "delGood":
+        delGood();
+        break;
 
-    // ***********************
-    // 客戶可用功能
-    // ***********************
-    case "CartList": // 取得購物車內容物清單
-        $Cart = get_CartList(101);
-        echo json_encode($Cart);
-        return;
+    case "CartList":
+        getCartList();
+        break;
 
-    case "addGood_cart": // 新增商品至購物車
-        $id = (int)$_REQUEST['id'];
-        //verify
-        add_Cart($id);
-        return;
+    case "addGood_cart":
+        addGoodToCart();
+        break;
 
-    case "delGood_cart": // 從購物車移除商品
-        $id = (int)$_REQUEST['id'];
-        //verify
-        del_Cart($id);
-        return;
+    case "delGood_cart":
+        delGoodFromCart();
+        break;
 
-    case "get_total": // 計算購物車內商品總價set_Good
-        $Price = get_Total();
-        echo json_encode($Price);
-        return;
+    case "get_total":
+        getTotal();
+        break;
 
     default:
+        // Handle default case
 }
 
-// users.php
+// 關閉資料庫連線
+mysqli_close($db);
+?>
+
+
+
 <?php
+// users.php
+
 require('dbconfig.php');
 
 define('ROLE_USER', 0);
 define('ROLE_MERCHANT', 1);
 
-function register_User($account, $password, $role)
+function registerUser($account, $password)
 {
     global $db;
+    $role = ROLE_USER;
     $sql = "INSERT INTO users (account, password, role) VALUES (?, ?, ?)";
     $stmt = mysqli_prepare($db, $sql);
     mysqli_stmt_bind_param($stmt, "sss", $account, $password, $role);
@@ -72,7 +63,7 @@ function register_User($account, $password, $role)
     return mysqli_insert_id($db);
 }
 
-function login_User($account, $password)
+function loginUser($account, $password)
 {
     global $db;
     $sql = "SELECT * FROM users WHERE account=? AND password=?";
@@ -82,12 +73,13 @@ function login_User($account, $password)
     $result = mysqli_stmt_get_result($stmt);
     return mysqli_fetch_assoc($result);
 }
-
-// clients.php
+?>
 <?php
+// clients.php
+
 require('dbconfig.php');
 
-function add_Client($userID, $clientName, $clientAddress)
+function addClient($userID, $clientName, $clientAddress)
 {
     global $db;
     $sql = "INSERT INTO clients (userID, clientName, clientAddress) VALUES (?, ?, ?)";
@@ -96,12 +88,14 @@ function add_Client($userID, $clientName, $clientAddress)
     mysqli_stmt_execute($stmt);
     return mysqli_insert_id($db);
 }
+?>
 
-// shops.php
 <?php
+// shops.php
+
 require('dbconfig.php');
 
-function add_Shop($userID, $shopName, $shopStar)
+function addShop($userID, $shopName, $shopStar)
 {
     global $db;
     $sql = "INSERT INTO shops (userID, shopName, shopStar) VALUES (?, ?, ?)";
@@ -110,9 +104,10 @@ function add_Shop($userID, $shopName, $shopStar)
     mysqli_stmt_execute($stmt);
     return mysqli_insert_id($db);
 }
-
-// model.php
+?>
 <?php
+// model.php
+
 require('users.php');
 require('clients.php');
 require('shops.php');
@@ -121,20 +116,24 @@ $act = $_REQUEST['act'];
 
 switch ($act) {
     case "registerUser":
-        $account = $_POST['account'];
-        $password = $_POST['password'];
-        $role = ROLE_USER; // You can change this as needed
-        $userID = register_User($account, $password, $role);
-        echo $userID;
-        return;
+        registerUserHandler();
+        break;
 
     default:
         // Handle default case
 }
 
-// orders.php
+function registerUserHandler()
+{
+    $account = $_POST['account'];
+    $password = $_POST['password'];
+    $userID = registerUser($account, $password);
+    echo $userID;
+}
+?>
 <?php
-// 引入資料庫設定檔案
+// orders.php
+
 require('dbconfig.php');
 
 // 定義 SQL 查詢語句
@@ -155,12 +154,13 @@ if (mysqli_query($db, $sql)) {
 } else {
     echo "Error creating table: " . mysqli_error($db);
 }
+?>
+<?php
+// goods.php
 
-// 關閉資料庫連線
-mysqli_close($db);
+require('dbconfig.php');
 
-// 新增商品
-function add_Good($shopID, $goodName, $goodPrice, $goodContent, $goodNum)
+function addGood($shopID, $goodName, $goodPrice, $goodContent, $goodNum)
 {
     global $db;
     $sql = "INSERT INTO goods (shopID, goodName, goodPrice, goodContent, goodNum) VALUES (?, ?, ?, ?, ?)";
@@ -176,8 +176,7 @@ function add_Good($shopID, $goodName, $goodPrice, $goodContent, $goodNum)
     }
 }
 
-// 刪除商品
-function del_Good($goodID)
+function delGood($goodID)
 {
     global $db;
     $sql = "DELETE FROM goods WHERE goodID=?";
@@ -186,16 +185,13 @@ function del_Good($goodID)
     mysqli_stmt_execute($stmt);
 }
 
-// 取得所有商品列表
-function get_GoodList()
+function getGoodList()
 {
     global $db;
     $sql = "SELECT * FROM goods";
     $result = mysqli_query($db, $sql);
     $goods = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    return
-
-
-
-
+    return $goods;
+}
+?>
 
