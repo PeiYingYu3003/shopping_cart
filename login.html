@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript" src="https://unpkg.com/vue@3.4.5"></script>
+</head>
+
+<body>
+    <h1>購物車(登入)</h1>
+    <hr/>
+    <div id="main">
+        <div id="list" v-if="UI=='main'">
+            <h1>登入</h1>
+            帳號: <input type="text" v-model="dat1.acc"/> <br/>
+            密碼: <input type="text" v-model="dat1.pwd" /> <br/><br/>
+            <button @click="logIn(dat1)">登入</button> <button @click="signUp()">註冊</button>
+        </div>
+
+        <div v-if="UI=='newAccount-1'">
+            <h1>註冊</h1>
+            角色:
+            <select v-model="selectedRole">
+                <option value="0">顧客</option>
+                <option value="1">店家</option>
+            </select> <br/><br/>
+            <button @click="setUI('newAccount-2')">下一步</button>
+        </div>
+
+        <div v-if="UI=='newAccount-2'">
+            <div v-if="selectedRole === '0'">
+                <!-- 顧客註冊表單 -->
+                <h1>建立一個新的顧客帳號</h1>
+                帳號: <input type="text" v-model="newClient.account"/> <br/>
+                密碼: <input type="text" v-model="newClient.password" /> <br/>
+                姓名: <input type="text" v-model="newClient.ClinetName"/> <br/>
+                住址: <input type="text" v-model="newClient.ClinetAddress"/> <br/>
+            </div>
+            <div v-else-if="selectedRole === '1'">
+                <!-- 店家註冊表單 -->
+                <h1>建立一個新的商家帳號</h1>
+                帳號: <input type="text" v-model="newShop.account"/> <br/>
+                密碼: <input type="text" v-model="newShop.password" /> <br/>
+                姓名: <input type="text" v-model="newShop.ShopName"/> <br/>
+            </div>
+            <br/><button @click="back()">返回</button> <button @click="newAccount()">確認申請</button>
+        </div>
+    </div>
+
+    <script>
+        const todoApp = Vue.createApp({
+            data() {
+                return {
+                    UI: 'main',
+                    dat1: {
+                        acc: '',
+                        pwd: ''
+                    },
+                    selectedRole: '0',
+                    newClient: {
+                        role: '0',
+                        account: '',
+                        password: '',
+                        ClinetName: '',
+                        ClinetAddress: ''
+                    },
+                    newShop: {
+                        role: '1',
+                        account: '',
+                        password: '',
+                        ShopName: ''
+                    }
+                };
+            },
+            methods: {
+                signUp() {
+                    this.setUI('newAccount-1');
+                },
+                back() {
+                    this.setUI('main');
+                },
+                logIn(dat1) {
+                    const that = this;
+                    let mydat = new FormData();
+                    mydat.append("id", dat1.acc);
+                    mydat.append("pwd", dat1.pwd);
+
+                    let url = "../control.php?act=LogIn";
+                    fetch(url, {
+                        method: 'POST',
+                        body: mydat
+                    })
+                    .then(function(res) {
+                        return res.json();
+                    })
+                    .then(function(data) {
+                        console.log(data);
+
+                        if (data.role === 0) {
+                            window.location.href = '../client/c_01.main.html';
+                        } else if (data.role === 1) {
+                            window.location.href = '../shop/s_01.main.html';
+                        } else {
+                            alert("帳號或密碼輸入錯誤！");
+                        }
+                    });
+                },
+
+                newAccount() {
+                    const that = this;
+                    let mydat = new FormData();
+                    if (this.selectedRole === '0') {
+                        mydat.append("dat", JSON.stringify(this.newClient));
+                    } else {
+                        mydat.append("dat", JSON.stringify(this.newShop));
+                    }
+
+                    let url = "../control.php?act=addNewUser";
+                    fetch(url, {
+                        method: 'POST',
+                        body: mydat
+                    })
+                    .then(function(res) {
+                        return res.text();
+                    })
+                    .then(function(data) {
+                        console.log(data);
+                        alert("新增帳號成功！");
+                        that.setUI('main');
+                    });
+                },
+                setUI: function(page) {
+				this.UI=page;
+			}
+            },
+            created() {
+                this.setUI('main');
+            }
+        }).mount("#main");
+    </script>
+</body>
+</html>
