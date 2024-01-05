@@ -129,17 +129,17 @@ switch ($act) {
 // 引入資料庫設定檔案
 require('dbconfig.php');
 
-// 創建 orders 資料表
-$sql = "CREATE TABLE IF NOT EXISTS `orders` (
+CREATE TABLE IF NOT EXISTS `orders` (
   `orderID` int(10) NOT NULL AUTO_INCREMENT,
   `clientID` int(10) NOT NULL,
   `shopID` int(10) NOT NULL,
-  `orderStatus` int(1) NOT NULL,
-  `deliverID` int(1) NOT NULL DEFAULT 0,
+  `orderStatus` int(2) NOT NULL, -- 修改為 int(2)
+  `deliverID` int(10) NOT NULL DEFAULT 0, -- 修改為 int(10)
   PRIMARY KEY (`orderID`),
   FOREIGN KEY (`clientID`) REFERENCES `clients` (`clientID`),
   FOREIGN KEY (`shopID`) REFERENCES `shops` (`shopID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 //名詞解釋--怕忘記後面要刪
 orderID：這是一個整數（int），長度為10。它是 orders 表的主鍵（Primary Key），並且使用 AUTO_INCREMENT，這表示當插入新的記錄時，這個欄位將自動遞增。
@@ -171,7 +171,7 @@ function add_Good($shopID, $goodName, $goodPrice, $goodContent, $goodNum) {
     global $db;
     $sql = "INSERT INTO goods (shopID, goodName, goodPrice, goodContent, goodNum) VALUES (?, ?, ?, ?, ?)";
     $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "isdsi", $shopID, $goodName, $goodPrice, $goodContent, $goodNum);
+    mysqli_stmt_bind_param($stmt, "issdi", $shopID, $goodName, $goodPrice, $goodContent, $goodNum);
     mysqli_stmt_execute($stmt);
     return mysqli_insert_id($db);  // 返回新加入商品的ID
 }
