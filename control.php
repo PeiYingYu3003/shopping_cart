@@ -51,62 +51,83 @@ switch ($act) {
   
 }
 
-?>
-// 在需要授權的地方，檢查用戶是否已經登錄
-if (!isUserLoggedIn()) {
-    // 未登錄，進行適當處理，例如跳轉到登錄頁面
-    header("Location: login.php");
-    exit();
+//後面直接加前面沒動
+//users.php
+<?php
+require('dbconfig.php');
+
+define('ROLE_USER', 0);
+define('ROLE_MERCHANT', 1);
+
+function register_User($account, $password, $role) {
+    global $db;
+    $sql = "INSERT INTO users (account, password, role) VALUES (?, ?, ?)";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "sss", $account, $password, $role);
+    mysqli_stmt_execute($stmt);
+    return mysqli_insert_id($db);
 }
 
-// 檢查用戶是否擁有訪問商家資源的權限
-if (!userHasPermission('access_merchant_resources')) {
-    // 未授權，返回錯誤或顯示相應的訊息
-    echo json_encode(['error' => 'Permission denied']);
-    exit();
+function login_User($account, $password) {
+    global $db;
+    $sql = "SELECT * FROM users WHERE account=? AND password=?";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "ss", $account, $password);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    return mysqli_fetch_assoc($result);
 }
-//通知狀態 查詢網路資料後加上的
-//在訂單狀態更新時，發送通知給用戶
-function sendOrderStatusNotification($userId, $orderId, $newStatus) {
-    // 實現通知的邏輯，可以使用電子郵件、簡訊、推送通知等方式
-    // ...
+//clients.php
+<?php
+require('dbconfig.php');
+
+function add_Client($userID, $clientName, $clientAddress) {
+    global $db;
+    $sql = "INSERT INTO clients (userID, clientName, clientAddress) VALUES (?, ?, ?)";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "iss", $userID, $clientName, $clientAddress);
+    mysqli_stmt_execute($stmt);
+    return mysqli_insert_id($db);
+}
+
+//shops.php
+<?php
+require('dbconfig.php');
+
+function add_Shop($userID, $shopName, $shopStar) {
+    global $db;
+    $sql = "INSERT INTO shops (userID, shopName, shopStar) VALUES (?, ?, ?)";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "iss", $userID, $shopName, $shopStar);
+    mysqli_stmt_execute($stmt);
+    return mysqli_insert_id($db);
+}
+//model.php
+<?php
+require('users.php');
+require('clients.php');
+require('shops.php');
+
+$act = $_REQUEST['act'];
+
+switch ($act) {
+    case "registerUser":
+       
+        $account = $_POST['account'];
+        $password = $_POST['password'];
+        $role = ROLE_USER; // You can change this as needed
+        $userID = register_User($account, $password, $role);
+        echo $userID;
+        return;
+
+
+    default:
+        // Handle default case
 }
 
 
-//下一步(不確定)
 
-class UserController {
-    private $users;
 
-    public function __construct() {
-        // 建立一個使用者資料陣列，模擬資料庫中的使用者資料
-        $this->users = [
-            ['id' => 1, 'username' => 'user1', 'password' => 'password1'],
-            ['id' => 2, 'username' => 'user2', 'password' => 'password2'],
-        ];
-    }
 
-    public function login($username, $password) {
-        // 透過迴圈檢查提供的帳號和密碼是否與陣列中的某個使用者匹配
-        foreach ($this->users as $user) {
-            if ($user['username'] == $username && $user['password'] == $password) {
-                // 登入成功，將使用者的 ID 存入 session 中
-                $_SESSION['user_id'] = $user['id'];
-                return true;
-            }
-        }
 
-        // 登入失敗
-        return false;
-    }
-
-    public function register($username, $password) {
-        // 假設簡單註冊，直接將新的帳號和密碼加入使用者陣列
-        $newUser = ['id' => count($this->users) + 1, 'username' => $username, 'password' => $password];
-        $this->users[] = $newUser;
-        return true;
-    }
-
-    // 未顯示的部分可能包含其他功能，例如修改密碼、取得使用者資訊等等
-}
 
