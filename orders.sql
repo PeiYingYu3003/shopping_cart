@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2024-01-02 19:29:30
+-- 產生時間： 2024-01-05 13:05:12
 -- 伺服器版本： 10.4.28-MariaDB
 -- PHP 版本： 8.2.4
 
@@ -32,7 +32,8 @@ CREATE TABLE `orders` (
   `clientID` int(10) NOT NULL,
   `shopID` int(10) NOT NULL,
   `orderStatus` int(1) NOT NULL,
-  `deliverID` int(1) NOT NULL DEFAULT 0
+  `deliverID` int(1) NOT NULL DEFAULT 0,
+  `feedback` int(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
