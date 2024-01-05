@@ -129,7 +129,8 @@ switch ($act) {
 // 引入資料庫設定檔案
 require('dbconfig.php');
 
-CREATE TABLE IF NOT EXISTS `orders` (
+// 創建 orders 資料表
+$sql = "CREATE TABLE IF NOT EXISTS `orders` (
   `orderID` int(10) NOT NULL AUTO_INCREMENT,
   `clientID` int(10) NOT NULL,
   `shopID` int(10) NOT NULL,
@@ -138,7 +139,18 @@ CREATE TABLE IF NOT EXISTS `orders` (
   PRIMARY KEY (`orderID`),
   FOREIGN KEY (`clientID`) REFERENCES `clients` (`clientID`),
   FOREIGN KEY (`shopID`) REFERENCES `shops` (`shopID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+
+// 執行 SQL 
+if (mysqli_query($db, $sql)) {
+    echo "Table orders created successfully";
+} else {
+    echo "Error creating table: " . mysqli_error($db);
+}
+
+// 關閉資料庫連線
+mysqli_close($db);
+?>
 
 
 //名詞解釋--怕忘記後面要刪
