@@ -14,7 +14,8 @@ switch ($act) {
 	case "addGood": // 新增商品
 		$jsonStr = $_POST['dat'];
 		$good = json_decode($jsonStr);
-		add_Good($good->goodName,$good->goodPrice,$good->goodContent,$good->goodID);
+		add_Good($good->goodID, $good->goodName, $good->goodPrice, $good->goodContent);
+
 		return;
 
 	case "delGood": // 刪除商品
