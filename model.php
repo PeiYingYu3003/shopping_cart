@@ -99,7 +99,8 @@ function add_Cart($clientID, $shopID, $goodID) {
 
     // 檢查客戶是否已經有該商家的訂單
     $orderID = checkOrder($clientID, $shopID);
-
+    $nowgoodNum = get_goodNum($goodID);
+    
     if ($orderID > 0) {
         // 客戶已有該商家的訂單，檢查商品是否已存在
         $nowNum = checkNum($orderID, $goodID);
@@ -107,6 +108,9 @@ function add_Cart($clientID, $shopID, $goodID) {
         if ($nowNum > 0) {
             // 商品已存在，將其數量加一
             $newNum = $nowNum + $goodNum;
+            if ($newNum > $nowgoodNum){//不能超過商品最大庫存
+                return false;
+            }
             $sql = "update details set purNum = ? where orderID=? and goodID = ?";
             $stmt = mysqli_prepare($db, $sql);
             mysqli_stmt_bind_param($stmt, "iii", $newNum, $orderID, $goodID);
@@ -128,6 +132,17 @@ function add_Cart($clientID, $shopID, $goodID) {
     }
 
     return true;
+}
+
+function get_goodNum($goodID) {
+    global $db;
+    $sql = "SELECT goodNum FROM goods WHERE goodID = ?";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $goodID);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+    return $row['goodNum'];
 }
 
 // 檢查客戶是否已經有該商家的訂單
@@ -232,11 +247,34 @@ function get_Total($clientID) {
 
 //客戶
 //送出訂單
-function send_Order($clientID){
+function send_Order($clientID) {
     global $db;
+    
+    // 更新訂單狀態
     $sql = "update orders set orderStatus = 1 where clientID = ? and orderStatus = 0;";
     $stmt = mysqli_prepare($db, $sql);
     mysqli_stmt_bind_param($stmt, "i", $clientID);
+    mysqli_stmt_execute($stmt);
+    
+    // 取得訂單中的商品及數量
+    $sql2 = "select goodID, purNum from details where orderID in (select orderID from orders where clientID = ? and orderStatus = 1)";
+    $stmt2 = mysqli_prepare($db, $sql2);
+    mysqli_stmt_bind_param($stmt2, "i", $clientID);
+    mysqli_stmt_execute($stmt2);
+    $result = mysqli_stmt_get_result($stmt2);
+    
+    // 依序更新庫存
+    while ($row = mysqli_fetch_assoc($result)) {
+        update_goodNum($row['goodID'], $row['purNum']);
+    }
+}
+// 更新庫存
+function update_goodNum($goodID, $purNum) {
+    global $db;
+    
+    $sql = "UPDATE goods SET goodNum = goodNum - ? WHERE goodID = ?";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "ii", $purNum, $goodID);
     mysqli_stmt_execute($stmt);
 }
 
@@ -441,4 +479,6 @@ function update_ShopStar($shopID) {
     mysqli_stmt_bind_param($stmt2, "ii", $avg, $shopID);
     mysqli_stmt_execute($stmt2);
 }
+
+
 ?>
