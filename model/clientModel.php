@@ -1,6 +1,6 @@
 <?php
 require('dbconfig.php');
-
+//商品清單
 function get_GoodList() {
 	global $db;
 	$sql = "select * from goods;";
@@ -14,50 +14,7 @@ function get_GoodList() {
 	}
 	return $rows;
 }
-
-//商家功能
-function get_ShopList($shopID) {
-	global $db;
-	$sql = "select * from goods where shopID=?;";
-	$stmt = mysqli_prepare($db, $sql ); //precompile sql指令，建立statement 物件，以便執行SQL
-    mysqli_stmt_bind_param($stmt, "i", $shopID);
-	mysqli_stmt_execute($stmt); //執行SQL
-	$result = mysqli_stmt_get_result($stmt); //取得查詢結果
-
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; //將此筆資料新增到陣列中
-	}
-	return $rows;
-}
-
-function add_Good($shopID,$goodName,$goodPrice,$goodContent,$goodNum,$goodID) {
-	global $db;
-    if($goodID > 0) {
-        $sql = "update goods set goodName=?, goodPrice=?, goodContent=?, goodNum=? where goodID=?"; //SQL中的 ? 代表未來要用變數綁定進去的地方
-        $stmt = mysqli_prepare($db, $sql); 
-        mysqli_stmt_bind_param($stmt, "sisii", $goodName, $goodPrice, $goodContent, $goodNum, $goodID); //bind parameters with variables, with types "sis":string, integer ,string
-    } else {
-        $sql = "insert into goods (shopID, goodName, goodPrice, goodContent, goodNum) values (?, ?, ?, ?, ?)"; //SQL中的 ? 代表未來要用變數綁定進去的地方
-        $stmt = mysqli_prepare($db, $sql); 
-        mysqli_stmt_bind_param($stmt, "isisi", $shopID, $goodName, $goodPrice, $goodContent, $goodNum); //bind parameters with variables, with types "sis":string, integer ,string
-    }
-    mysqli_stmt_execute($stmt);
-	return True;
-}
-
-function del_Good($id) {
-	global $db;
-	$sql = "delete from goods where goodID=?;";
-	$stmt = mysqli_prepare($db, $sql); 
-	mysqli_stmt_bind_param($stmt, "i", $id);
-	mysqli_stmt_execute($stmt);
-	return True;
-}
-
-
-
-//客戶功能
+//購物車清單
 function get_CartList($clientID) {
 	global $db;
 	$sql = "SELECT orders.orderID, details.goodID, goods.goodName, goods.goodPrice, details.purNum
@@ -75,6 +32,7 @@ function get_CartList($clientID) {
 	return $rows;
 }
 
+//確認目前數量
 function checkNum($orderID, $goodID){
     global $db;
     $sql = "select * from details where orderID=? and goodID=?";
@@ -92,7 +50,7 @@ function checkNum($orderID, $goodID){
     }
 }
 
-
+//加入購物車
 function add_Cart($clientID, $shopID, $goodID) {
     global $db;
     $goodNum = 1;
@@ -102,7 +60,7 @@ function add_Cart($clientID, $shopID, $goodID) {
     $nowgoodNum = get_goodNum($goodID);
     
     if ($orderID > 0) {
-        // 客戶已有該商家的訂單，檢查商品是否已存在
+        // 檢查購物車內有幾個
         $nowNum = checkNum($orderID, $goodID);
 
         if ($nowNum > 0) {
@@ -123,7 +81,7 @@ function add_Cart($clientID, $shopID, $goodID) {
             mysqli_stmt_execute($stmt);
         }
     } else {
-        // 客戶還沒有該商家的訂單，建立新的訂單再新增商品
+        // 沒有該商家的訂單，建立新訂單
         $orderID = createOrder($clientID, $shopID);
         $sql = "insert into details (orderID, goodID, purNum) values (?, ?, ?)";
         $stmt = mysqli_prepare($db, $sql);
@@ -144,7 +102,6 @@ function get_goodNum($goodID) {
     $row = mysqli_fetch_assoc($result);
     return $row['goodNum'];
 }
-
 // 檢查客戶是否已經有該商家的訂單
 function checkOrder($clientID, $shopID) {
     global $db;
@@ -244,9 +201,6 @@ function get_Total($clientID) {
     $row = mysqli_fetch_assoc($result);
     return $row['total']; //確保不會抓到其他值
 }
-
-//客戶
-//送出訂單
 function send_Order($clientID) {
     global $db;
     
@@ -294,97 +248,7 @@ function get_OrderList($clientID){
 	return $rows;
 }
 
-//商家
-//確認訂單
-function confirm_OrderList($shopID){
-	global $db;
-	$sql = "select * from orders where shopID=? and orderStatus=1;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $shopID);
-	mysqli_stmt_execute($stmt); //執行SQL
-	$result = mysqli_stmt_get_result($stmt); //取得查詢結果
-
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; //將此筆資料新增到陣列中
-	}
-	return $rows;
-}
-function confirm_Order($orderID){
-	global $db;
-	$sql = "update orders set orderStatus=2 where orderID=?;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $orderID);
-	mysqli_stmt_execute($stmt); 
-}
-//包裝出貨
-function transmit_OrderList($shopID){
-	global $db;
-	$sql = "select * from orders where shopID=? and orderStatus=2;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $shopID);
-	mysqli_stmt_execute($stmt); //執行SQL
-	$result = mysqli_stmt_get_result($stmt); //取得查詢結果
-
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; //將此筆資料新增到陣列中
-	}
-	return $rows;
-}
-function transmit_Order($orderID){
-	global $db;
-	$sql = "update orders set orderStatus=3 where orderID=?;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $orderID);
-	mysqli_stmt_execute($stmt); 
-}
-
-//物流功能
-//已寄送
-function deal_Deliver(){
-	global $db;
-	$sql = "select * from orders where orderStatus=3;";
-	$stmt = mysqli_prepare($db, $sql);
-	mysqli_stmt_execute($stmt); 
-	$result = mysqli_stmt_get_result($stmt); 
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; 
-	}
-	return $rows;
-}
-function check_Deliver($orderID){ 
-	global $db;
-	$sql = "update orders set orderStatus=4 where orderID=?;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $orderID);
-	mysqli_stmt_execute($stmt); 
-}
-
-//已送達
-function deal_ready(){
-	global $db;
-	$sql = "select * from orders where orderStatus=4;"; //評價不為空
-	$stmt = mysqli_prepare($db, $sql);
-	mysqli_stmt_execute($stmt); 
-	$result = mysqli_stmt_get_result($stmt);
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; 
-	}
-	return $rows;
-}
-function check_ready($orderID){ 
-	global $db;
-	$sql = "update orders set status=5 where orderID=?;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $orderID);
-	mysqli_stmt_execute($stmt); 
-}
-
-//客戶
-//收到並評價訂單
+//給予評價
 function feedback_OrderList($clientID){
 	global $db;
 	$sql = "select * from orders where orderStatus=5 and clientID=?;";
@@ -415,54 +279,7 @@ function feedback_Order($feedback,$orderID){
     update_ShopStar($shopID);//更新評價
 }
 
-//註冊帳號
-function registerUser($account, $password, $role) {
-    global $db;
-    
-    if(isExist($account)){ //檢查重複註冊
-        return false;
-    }
-    
-    $newpassword = password_hash($password, PASSWORD_DEFAULT);
-    $sql = "insert into users (account, password, role) values (?, ?, ?)";
-    $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "ssi", $account, $newpassword, $role);
-    mysqli_stmt_execute($stmt);
-
-    return true;  // 註冊成功
-    
-}
-function isExist($account) {
-    global $db;
-    
-    $sql = "SELECT * FROM users WHERE account = ?";
-    $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "s", $account);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-
-    return mysqli_num_rows($result) > 0;
-}
-//登入帳號
-function login($account, $password) {
-    global $db;
-
-    $sql="select * from users where account=?";
-    $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt,'s',$account);
-    mysqli_stmt_execute($stmt);
-    $result=mysqli_stmt_get_result($stmt);
-    if ($row=mysqli_fetch_assoc($result)) { 
-        if (password_verify($password,$row['password']))//驗證密碼
-            $msg = "Welcome!";
-        else
-            $msg = "Wrong Password!";
-    }
-    else
-      $msg = "Login fail!";
-    return $msg;
-}
-//計算商家評價
+//更新商家評價
 function update_ShopStar($shopID) {
     global $db;
     //計算平均
@@ -479,6 +296,4 @@ function update_ShopStar($shopID) {
     mysqli_stmt_bind_param($stmt2, "ii", $avg, $shopID);
     mysqli_stmt_execute($stmt2);
 }
-
-
 ?>
