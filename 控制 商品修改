@@ -1,0 +1,63 @@
+<?php
+// orders.php
+
+require('dbconfig.php');
+
+// 定義 SQL 查詢語句
+$sql = "CREATE TABLE IF NOT EXISTS `orders` (
+  `orderID` int(10) NOT NULL AUTO_INCREMENT,
+  `clientID` int(10) NOT NULL,
+  `shopID` int(10) NOT NULL,
+  `orderStatus` int(2) NOT NULL,
+  `deliverID` int(10) DEFAULT 0 NOT NULL,
+  PRIMARY KEY (`orderID`),
+  FOREIGN KEY (`clientID`) REFERENCES `clients` (`clientID`),
+  FOREIGN KEY (`shopID`) REFERENCES `shops` (`shopID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+
+// 執行 SQL 
+if (mysqli_query($db, $sql)) {
+    echo "Table orders created successfully";
+} else {
+    echo "Error creating table: " . mysqli_error($db);
+}
+?>
+<?php
+// goods.php
+
+require('dbconfig.php');
+
+function addGood($shopID, $goodName, $goodPrice, $goodContent, $goodNum)
+{
+    global $db;
+    $sql = "INSERT INTO goods (shopID, goodName, goodPrice, goodContent, goodNum) VALUES (?, ?, ?, ?, ?)";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "issdi", $shopID, $goodName, $goodPrice, $goodContent, $goodNum);
+
+    if (mysqli_stmt_execute($stmt)) {
+        // 插入成功
+        return mysqli_insert_id($db);  // 返回新加入商品的ID
+    } else {
+        // 插入失敗，拋出例外
+        throw new Exception("商品插入失敗: " . mysqli_error($db));
+    }
+}
+
+function delGood($goodID)
+{
+    global $db;
+    $sql = "DELETE FROM goods WHERE goodID=?";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $goodID);
+    mysqli_stmt_execute($stmt);
+}
+
+function getGoodList()
+{
+    global $db;
+    $sql = "SELECT * FROM goods";
+    $result = mysqli_query($db, $sql);
+    $goods = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    return $goods;
+}
+?>
