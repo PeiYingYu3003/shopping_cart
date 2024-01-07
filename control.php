@@ -73,8 +73,7 @@ function loginUser($account, $password)
     $result = mysqli_stmt_get_result($stmt);
     return mysqli_fetch_assoc($result);
 }
-?>
-<?php
+php
 // clients.php
 
 require('dbconfig.php');
