@@ -1,0 +1,26 @@
+?>
+<?php
+// model.php
+
+require('users.php');
+require('clients.php');
+require('shops.php');
+
+$act = $_REQUEST['act'];
+
+switch ($act) {
+    case "registerUser":
+        registerUserHandler();
+        break;
+
+    default:
+        // Handle default case
+}
+
+function registerUserHandler()
+{
+    $account = $_POST['account'];
+    $password = $_POST['password'];
+    $userID = registerUser($account, $password);
+    echo $userID;
+}
