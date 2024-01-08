@@ -1,96 +1,35 @@
 <?php
 require('dbconfig.php');
 
-//ª«¬y¥\¯à
-//¤w±H°e
-function deal_Deliver(){
-	global $db;
-	$sql = "select * from orders where orderStatus=3;";
-	$stmt = mysqli_prepare($db, $sql);
-	mysqli_stmt_execute($stmt); 
-	$result = mysqli_stmt_get_result($stmt); 
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; 
-	}
-	return $rows;
-}
-function check_Deliver($orderID){ 
-	global $db;
-	$sql = "update orders set orderStatus=4 where orderID=?;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $orderID);
-	mysqli_stmt_execute($stmt); 
-}
-
-//¤w°e¹F
-function deal_ready(){
-	global $db;
-	$sql = "select * from orders where orderStatus=4;"; //µû»ù¤£¬°ªÅ
-	$stmt = mysqli_prepare($db, $sql);
-	mysqli_stmt_execute($stmt); 
-	$result = mysqli_stmt_get_result($stmt);
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; 
-	}
-	return $rows;
-}
-function check_ready($orderID){ 
-	global $db;
-	$sql = "update orders set status=5 where orderID=?;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $orderID);
-	mysqli_stmt_execute($stmt); 
-}
-
-//µù¥U±b¸¹
-function registerUser($account, $password, $role) {
+function login($acc, $pwd) {
     global $db;
-    
-    if(isExist($account)){ //ÀË¬d­«½Æµù¥U
-        return false;
-    }
-    
-    $newpassword = password_hash($password, PASSWORD_DEFAULT);
-    $sql = "insert into users (account, password, role) values (?, ?, ?)";
-    $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "ssi", $account, $newpassword, $role);
-    mysqli_stmt_execute($stmt);
 
-    return true;  // µù¥U¦¨¥\
-    
-}
-function isExist($account) {
-    global $db;
-    
-    $sql = "SELECT * FROM users WHERE account = ?";
+    $sql = "select * FROM user WHERE account=? and password=?";
     $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "s", $account);
+    mysqli_stmt_bind_param($stmt, 'ss', $acc,$pwd);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
-    return mysqli_num_rows($result) > 0;
-}
-
-//µn¤J±b¸¹
-function login($account, $password) {
-    global $db;
-
-    $sql="select * from users where account=?";
-    $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt,'s',$account);
-    mysqli_stmt_execute($stmt);
-    $result=mysqli_stmt_get_result($stmt);
-    if ($row=mysqli_fetch_assoc($result)) { 
-        if (password_verify($password,$row['password']))//ÅçÃÒ±K½X
-            $msg = "Welcome!";
-        else
-            $msg = "Wrong Password!";
+    $row = mysqli_fetch_assoc($result);
+    if ($row == null){
+        return -1;
+    }else{
+        return $row;
     }
-    else
-      $msg = "Login fail!";
-    return $msg;
 }
 
+// ç¢ºèªæœ‰å“ªäº›è¨‚å–®
+function confirm_OrderList(){
+	global $db;
+	$sql = "select * from orders,clients,shops where orders.clientID=clients.clientID and orders.shopID = shops.shopID;";
+	$stmt = mysqli_prepare($db, $sql); 
+	mysqli_stmt_execute($stmt); //åŸ·è¡ŒSQL
+	$result = mysqli_stmt_get_result($stmt); //å–å¾—æŸ¥è©¢çµæžœ
+
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; //å°‡æ­¤ç­†è³‡æ–™æ–°å¢žåˆ°é™£åˆ—ä¸­
+	}
+	return $rows;
+}
 ?>
