@@ -12,6 +12,7 @@
     <div id="main">
         <div v-if="UI=='main'">
             <h2>{{ shopName }} 歡迎您開始販售物品！ </h2>
+            <h2>您現在商店的綜合星級是 {{shopStar}} 顆星！</h2>
             <h1>商品清單</h1>
 
 			<button @click="setAddUI()">新增商品</button>&nbsp;&nbsp;
@@ -42,6 +43,7 @@
         <div v-if="UI=='checkOrder'">
 			<table border=1>
                 <h2>{{ shopName }} 歡迎您開始販售物品！ </h2>
+                <h2>您現在商店的綜合星級是 {{shopStar}} 顆星！</h2>
                 <h1>目前訂單</h1>
 
                 <button @click="back()">返回商品清單</button>&nbsp;&nbsp;
@@ -64,6 +66,7 @@
         <div v-if="UI=='checkDetail'">
             <table border=1>
                 <h2>{{ shopName }} 歡迎您開始販售物品！ </h2>
+                <h2>您現在商店的綜合星級是 {{shopStar}} 顆星！</h2>
                 <h1>{{ dat3[0].orderID }} 號訂單細項</h1>
 
                 <button @click="back()">返回商品清單</button>&nbsp;&nbsp;
@@ -94,7 +97,8 @@
                     role: '', // 目前登入者的角色
                     userID: '', // 目前登入者的ID
                     shopID:'',
-                    shopName:'' // 目前登入者的名稱
+                    shopName:'', // 目前登入者的名稱
+                    shopStar:''
                 };
             },
             methods: {
@@ -120,6 +124,7 @@
                         console.log(data);
                         this.shopName = data.shopName;
                         this.shopID = data.shopID;
+                        this.shopStar = data.shopStar;
                         this.loadList();
                     })
                 },
