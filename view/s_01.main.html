@@ -1,0 +1,257 @@
+<html>
+<head>
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+     <title>購物車(主頁)</title>
+     <script type="text/javascript" src="https://unpkg.com/vue@3.4.5"></script>
+     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+</head>
+
+<body>
+    <h1>購物車(主頁)</h1>
+    <hr/>
+    <div id="main">
+        <div v-if="UI=='main'">
+            <h2>{{ shopName }} 歡迎您開始販售物品！ </h2>
+            <h1>商品清單</h1>
+
+			<button @click="setAddUI()">新增商品</button>&nbsp;&nbsp;
+            <button @click="setOrderUI()">查看訂單</button>&nbsp;&nbsp;
+            <button @click="logout">登出</button><br/><br/>
+			<table border=1>
+				<tr><td> 商品序號 </td><td> 商品名稱 </td><td> 商品單價 </td><td> 商品數量 </td><td> 文字說明 </td><td>-</td></tr>
+				<tr v-for="good in dat">
+					<td>&nbsp;{{good.goodID}}</td>
+					<td>&nbsp;{{good.goodName}}</td>
+					<td>&nbsp;$ {{good.goodPrice}}</td>
+                    <td>&nbsp;{{good.goodNum}}</td>
+					<td>&nbsp;{{good.goodContent}}</td>
+					<td><button @click="delGood(good.goodID)">刪除商品</button> <button @click="setEditUI(good)">更改商品資訊</button></td>
+				</tr>
+			</table>
+		</div>
+        <div v-if="UI=='editForm'">
+			商品名稱: <input type="text"  v-model="newGood.goodName"/><br/>
+			商品單價: <input type="text"  v-model="newGood.goodPrice"/><br/>
+            商品數量: <input type="text"  v-model="newGood.goodNum"/><br/>
+			商品說明: <textarea v-model="newGood.goodContent"></textarea><br/><br/>
+			<input type='button' @click="back()" value="返回">&nbsp;
+			<input type='button' @click="addGood()" value="儲存">
+		</div>
+
+        
+        <div v-if="UI=='checkOrder'">
+			<table border=1>
+                <h2>{{ shopName }} 歡迎您開始販售物品！ </h2>
+                <h1>目前訂單</h1>
+
+                <button @click="back()">返回商品清單</button>&nbsp;&nbsp;
+                <button @click="logout">登出</button><br/><br/>
+				<tr><td> 訂單序號 </td><td> 所屬顧客 </td><td> 訂單狀態 </td><td> 負責物流 </td><td>-</td></tr>
+				<tr v-for="order in dat2">
+					<td>&nbsp;{{order.orderID}}</td>
+                    <td>&nbsp;{{order.clientName}}</td>
+					<td>&nbsp;{{order.orderStatus}}</td>
+                    <td>&nbsp;唯一物流公司</td>
+					<td>
+                        <button @click="setDetailUI(order.orderID)">查看訂單細項</button>
+                        <button v-if="order.orderStatus === '已結帳'" @click="setOrderStatus(2, order.orderID)">開始處理訂單</button>
+                        <button v-if="order.orderStatus === '處理中'" @click="setOrderStatus(3, order.orderID)">寄送訂單內物品</button>
+                    </td>
+				</tr>
+			</table>
+		</div>
+        
+        <div v-if="UI=='checkDetail'">
+            <table border=1>
+                <h2>{{ shopName }} 歡迎您開始販售物品！ </h2>
+                <h1>{{ dat3[0].orderID }} 號訂單細項</h1>
+
+                <button @click="back()">返回商品清單</button>&nbsp;&nbsp;
+                <button @click="setOrderUI()">返回查看訂單</button>&nbsp;&nbsp;
+                <button @click="logout">登出</button><br/><br/>
+                
+                <tr><td> 商品名稱 </td><td> 商品單價 </td><td> 購買數量 </td></tr>
+                <tr v-for="details in dat3">
+                    <td>&nbsp;{{details.goodName}}</td>
+                    <td>&nbsp;{{details.goodPrice}}</td>
+                    <td>&nbsp;{{details.purNum}}</td>
+                </tr>
+            </table>
+        </div>
+
+        
+    </div>
+			
+
+     <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    UI:'main',
+                    dat:[],
+                    dat2:[],
+                    dat3:[],
+                    role: '', // 目前登入者的角色
+                    userID: '', // 目前登入者的ID
+                    shopID:'',
+                    shopName:'' // 目前登入者的名稱
+                };
+            },
+            methods: {
+                loadInCookie:function(){ // 讀取 Cookie 中的 userInfo
+                    const userInfoString = Cookies.get('userInfo');
+                    if (userInfoString) {
+                        const userInfo = JSON.parse(userInfoString);
+
+                        // 將 Cookie 中的信息存儲到 data 中
+                        this.role = userInfo.role;
+                        this.userID = userInfo.userID;
+                    } else {
+                        alert('未找到用戶資訊。');
+                    }
+                },
+                loadUserName:function(){ // 抓使用者的名稱
+                    let url = "../control/s_control.php?act=findUserName&id="+this.userID;
+                    fetch(url, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {  
+                        console.log(data);
+                        this.shopName = data.shopName;
+                        this.shopID = data.shopID;
+                        this.loadList();
+                    })
+                },
+                setUI: function(page) { // 畫面切換
+				    this.UI=page;
+			    },
+                setAddUI: function() {
+                    this.newGood={
+                        goodID: -1,
+                        goodName: '',
+                        goodPrice: '',
+                        goodContent: '',
+                        shopID:this.shopID
+                    }
+                    this.setUI('editForm');
+                },
+                setEditUI: function(good) {
+                    this.newGood=good;
+                    this.setUI('editForm');
+                },
+                setOrderUI(){ // 切換到確認訂單畫面
+                    this.loadOrder();
+                    const that=this;
+                    that.setUI('checkOrder');
+                },
+                setDetailUI(orderID){ // 切換到確認訂單畫面
+                    this.checkOderDetail(orderID);
+                    const that=this;
+                    that.setUI('checkDetail');
+                },
+                back:function(){ // 返回首頁
+                    const that=this;
+                    that.setUI('main');
+                    that.loadList();
+                },
+                logout: function(){ // 登出
+                    Cookies.remove('userInfo'); // 清空 Cookie
+                    window.location.href = 'login.html'; // 重新導向到 login.html
+                },
+                loadList: function () { // 載入商品清單
+                    const that=this; 
+                    let url = '../control/s_control.php?act=GoodsList&id='+that.shopID;
+                    console.log(that.shopID);
+                    console.log(url);
+                    fetch(url)
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(myJson) {
+                        console.log(myJson);
+                        that.dat = myJson;
+                    });
+                },
+                loadOrder: function () { // 載入訂單清單
+                    const that=this; 
+                    let url='../control/s_control.php?act=OrderList&id='+this.shopID;
+                    fetch(url)
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(myJson) {
+                        console.log(myJson);
+                        that.dat2 = myJson;
+                    });
+			    },
+                delGood: function (id) { // 刪除某項商品
+                    const that=this;
+                    const confirmed = window.confirm('確定要刪除商品嗎？'); // 提示視窗
+                    if (confirmed){
+                        let url="../control/s_control.php?act=delGood&id="+id;
+                        fetch(url,{
+                            method: 'POST'
+                        })
+                        .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                        .then(function(data){
+                            console.log(data);
+                            that.loadList();
+                        })
+                    };
+                }, 
+                addGood: function () { // 新增/更新商品
+                    const that=this;
+                    let mydat = new FormData();
+                    mydat.append( "dat", JSON.stringify(this.newGood) );
+        
+                    let url="../control/s_control.php?act=addGood";
+                    fetch(url,{
+                        method: 'POST',
+                        body: mydat // 將表單物件放入fetch的body屬性
+                    })
+                    .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                    .then(function(data){ 
+                        console.log(data);
+                        alert("新增/更新商品成功！");
+                        that.setUI('main');
+                        that.loadList();
+                    })
+                },
+                setOrderStatus:function(status,orderID){
+                    const that=this;
+                    let url="../control/s_control.php?act=setOrderStatus&status="+status+"&orderID="+orderID;
+                    console.log(url)
+                    fetch(url,{
+                        method: 'POST',
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(myJson) {
+                        console.log(myJson);
+                        alert("訂單狀態更新成功！");
+                        that.setOrderUI();
+                    });
+                },
+                checkOderDetail(orderID){
+                    const that=this; 
+                    let url='../control/s_control.php?act=checkOderDetail&id='+orderID;
+                    fetch(url)
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(myJson) {
+                        that.dat3 = myJson;
+                        console.log(that.dat3);
+                    });
+			    },
+            },
+            created() {
+                this.loadInCookie();
+                this.loadUserName();
+            },
+        }).mount("#main");
+     </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript" src="https://unpkg.com/vue@3.4.5"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+</head>
+
+<body>
+    <h1>購物車(登入)</h1>
+    <hr/>
+    <div id="main">
+        <h1>登入</h1>
+        帳號: <input type="text" v-model="acc"/> <br/>
+        密碼: <input type="text" v-model="pwd" /> <br/><br/>
+        <button @click="logIn">登入</button> <button @click="signUp">註冊</button>
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    acc: '',
+                    pwd: ''
+                };
+            },
+            methods: {
+                logIn() {
+                    const mydat = new FormData();
+                    mydat.append("acc", this.acc);
+                    mydat.append("pwd", this.pwd);
+
+                    const url = "../control/login_control.php";
+                    fetch(url, {
+                        method: 'POST',
+                        body: mydat
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log(data);
+                        if (data===-1) {
+                            alert('登入失敗，請檢查帳號密碼。');
+                        }else{
+                            console.log(data);
+                            alert('登入成功！');
+                            Cookies.set('userInfo', JSON.stringify(data), { expires: 1 });
+                            if (data.role===0)
+                                window.location.href = 'c_01.main.html';
+                            else if (data.role === 1)
+                                window.location.href = 's_01.main.html';
+                            else if (data.role === 2)
+                                window.location.href = 'd_01.main.html';   
+                            
+                            
+                        }
+                    });
+                },
+                signUp() {
+                    // 在這裡實現註冊的相應邏輯
+                    // 你可以導向使用者到註冊頁面或執行相應的註冊操作
+                }
+            }
+        }).mount("#main");
+    </script>
+</body>
+</html>

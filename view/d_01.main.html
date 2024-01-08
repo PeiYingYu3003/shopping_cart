@@ -1,0 +1,144 @@
+<html>
+<head>
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+     <title>購物車(主頁)</title>
+     <script type="text/javascript" src="https://unpkg.com/vue@3.4.5"></script>
+     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+</head>
+
+<body>
+    <h1>購物車(主頁)</h1>
+    <hr/>
+    <div id="main">
+        <div v-if="UI=='main'">
+            <h2>唯一物流公司 歡迎您開始處理訂單！ </h2>            
+			<table border=1>
+                <h1>目前訂單</h1>
+
+                <button @click="logout">登出</button><br/><br/>
+				<tr><td> 訂單序號 </td><td> 所屬商家 </td><td> 所屬顧客 </td><td> 訂單狀態 </td><td>-</td></tr>
+				<tr v-for="order in dat">
+					<td>&nbsp;{{order.orderID}}</td>
+                    <td>&nbsp;{{order.shopName}}</td>
+                    <td>&nbsp;{{order.clientName}}</td>
+					<td>&nbsp;{{order.orderStatus}}</td>
+                    <td>
+                        <button @click="setDetailUI(order.orderID)">查看訂單細項</button>&nbsp;
+                        <button v-if="order.orderStatus === '寄送中'" @click="setOrderStatus(4, order.orderID)">將訂單寄出</button>
+                        <button v-if="order.orderStatus === '已寄送'" @click="setOrderStatus(5, order.orderID)">訂單已送達</button>
+                    </td>
+				</tr>
+			</table>
+		</div>
+
+        <div v-if="UI=='checkDetail'">
+            <table border=1>
+                <h2>唯一物流公司 歡迎您開始處理訂單！ </h2> 
+                <h1>{{ dat2[0].orderID }} 號訂單細項</h1>
+
+                <button @click="back()">返回查看訂單</button>&nbsp;&nbsp;
+                <button @click="logout">登出</button><br/><br/>
+                
+                <tr><td> 商品名稱 </td><td> 商品單價 </td><td> 購買數量 </td></tr>
+                <tr v-for="details in dat2">
+                    <td>&nbsp;{{details.goodName}}</td>
+                    <td>&nbsp;$ {{details.goodPrice}}</td>
+                    <td>&nbsp;{{details.purNum}}</td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+			
+
+     <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    UI:'main',
+                    dat:[],
+                    dat2:[],
+                    role: '', // 目前登入者的角色
+                    userID: '', // 目前登入者的ID
+                };
+            },
+            methods: {
+                loadInCookie:function(){ // 讀取 Cookie 中的 userInfo
+                    const userInfoString = Cookies.get('userInfo');
+                    if (userInfoString) {
+                        const userInfo = JSON.parse(userInfoString);
+
+                        // 將 Cookie 中的信息存儲到 data 中
+                        this.role = userInfo.role;
+                        this.userID = userInfo.userID;
+                       
+                    } else {
+                        alert('未找到用戶資訊。');
+                    }
+                },
+                setUI: function(page) { // 畫面切換
+				    this.UI=page;
+			    },
+                back:function(){ // 返回首頁
+                    const that=this;
+                    this.loadOrder();
+                    that.setUI('main');
+                },
+                setDetailUI(orderID){ // 切換到確認訂單畫面
+                    this.checkOderDetail(orderID);
+                    const that=this;
+                    that.setUI('checkDetail');
+                },
+                logout: function(){ // 登出
+                    Cookies.remove('userInfo'); // 清空 Cookie
+                    window.location.href = 'login.html'; // 重新導向到 login.html
+                },
+                loadOrder: function () { // 載入訂單清單
+                    const that=this; 
+                    let url='../control/d_control.php?act=OrderList';
+                    fetch(url)
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(myJson) {
+                        console.log(myJson);
+                        that.dat = myJson;
+                    });
+			    },
+                setOrderStatus:function(status,orderID){
+                    const that=this;
+                    let url="../control/s_control.php?act=setOrderStatus&status="+status+"&orderID="+orderID;
+                    console.log(url)
+                    fetch(url,{
+                        method: 'POST',
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(myJson) {
+                        console.log(myJson);
+                        alert("訂單狀態更新成功！");
+                        that.back();
+                    });
+                },
+                checkOderDetail(orderID){
+                    const that=this; 
+                    let url='../control/s_control.php?act=checkOderDetail&id='+orderID;
+                    fetch(url)
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(myJson) {
+                        that.dat2 = myJson;
+                        console.log(that.dat2);
+                    });
+			    },
+            },
+            created() {
+                this.loadInCookie();
+                this.loadOrder();
+            },
+        }).mount("#main");
+     </script>
+</body>
+</html>
