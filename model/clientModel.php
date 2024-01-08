@@ -1,72 +1,56 @@
 <?php
 require('dbconfig.php');
-//°Ó«~²M³æ
-function get_GoodList() {
-	global $db;
-	$sql = "select * from goods;";
-	$stmt = mysqli_prepare($db, $sql ); //precompile sql«ü¥O¡A«Ø¥ßstatement ª«¥ó¡A¥H«K°õ¦æSQL
-	mysqli_stmt_execute($stmt); //°õ¦æSQL
-	$result = mysqli_stmt_get_result($stmt); //¨ú±o¬d¸ßµ²ªG
-
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; //±N¦¹µ§¸ê®Æ·s¼W¨ì°}¦C¤¤
-	}
-	return $rows;
-}
-//ÁÊª«¨®²M³æ
-function get_CartList($clientID) {
-	global $db;
-	$sql = "SELECT orders.orderID, details.goodID, goods.goodName, goods.goodPrice, details.purNum
-            FROM orders JOIN details ON orders.orderID = details.orderID JOIN goods ON details.goodID = goods.goodID
-            WHERE orders.orderStatus = 0 AND orders.clientID =?;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $clientID);
-	mysqli_stmt_execute($stmt); //°õ¦æSQL
-	$result = mysqli_stmt_get_result($stmt); //¨ú±o¬d¸ßµ²ªG
-
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; //±N¦¹µ§¸ê®Æ·s¼W¨ì°}¦C¤¤
-	}
-	return $rows;
-}
-
-//½T»{¥Ø«e¼Æ¶q
-function checkNum($orderID, $goodID){
+// æŠ“å®¢æˆ¶åç¨±
+function findName($userID) {
     global $db;
-    $sql = "select * from details where orderID=? and goodID=?";
-    $stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "ii", $orderID, $goodID);
-    mysqli_stmt_execute($stmt); // °õ¦æSQL
-    $result = mysqli_stmt_get_result($stmt); // ¨ú±o¬d¸ßµ²ªG
-    
-    // ÀË¬d¬O§_¦³²Å¦X±ø¥óªº¸ê®Æ
-    if ($row = mysqli_fetch_assoc($result)) {
-        $nowNum = $row['purNum'];
-        return $nowNum;
-    } else {
-        return -1;  // ¨S¦³²Å¦X±ø¥óªº¸ê®Æ
+
+    $sql = "select * FROM clients WHERE userID=?";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, 'i',$userID);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    $row = mysqli_fetch_assoc($result);
+    if ($row != null){
+        return $row;
+    }else {
+        // å¦‚æžœæœªæ‰¾åˆ°ç”¨æˆ¶ï¼Œè¿”å›ž JSON æ ¼å¼çš„ç©ºæ•¸æ“š
+        return json_encode(array());
     }
 }
 
-//¥[¤JÁÊª«¨®
+//å•†å“æ¸…å–®
+function get_GoodList() {
+	global $db;
+	$sql = "select goodID,goodName,goodPrice,goodContent,shops.shopName,shops.shopID FROM goods,shops WHERE goods.shopID=shops.shopID;";
+	$stmt = mysqli_prepare($db, $sql ); //precompile sqlæŒ‡ä»¤ï¼Œå»ºç«‹statement ç‰©ä»¶ï¼Œä»¥ä¾¿åŸ·è¡ŒSQL
+	mysqli_stmt_execute($stmt); //åŸ·è¡ŒSQL
+	$result = mysqli_stmt_get_result($stmt); //å–å¾—æŸ¥è©¢çµæžœ
+
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; //å°‡æ­¤ç­†è³‡æ–™æ–°å¢žåˆ°é™£åˆ—ä¸­
+	}
+	return $rows;
+}
+
+//åŠ å…¥è³¼ç‰©è»Š
 function add_Cart($clientID, $shopID, $goodID) {
     global $db;
     $goodNum = 1;
 
-    // ÀË¬d«È¤á¬O§_¤w¸g¦³¸Ó°Ó®aªº­q³æ
+    // æª¢æŸ¥å®¢æˆ¶æ˜¯å¦å·²ç¶“æœ‰è©²å•†å®¶çš„è¨‚å–®
     $orderID = checkOrder($clientID, $shopID);
     $nowgoodNum = get_goodNum($goodID);
     
     if ($orderID > 0) {
-        // ÀË¬dÁÊª«¨®¤º¦³´X­Ó
+        // æª¢æŸ¥è³¼ç‰©è»Šå…§æœ‰å¹¾å€‹
         $nowNum = checkNum($orderID, $goodID);
 
         if ($nowNum > 0) {
-            // °Ó«~¤w¦s¦b¡A±N¨ä¼Æ¶q¥[¤@
+            // å•†å“å·²å­˜åœ¨ï¼Œå°‡å…¶æ•¸é‡åŠ ä¸€
             $newNum = $nowNum + $goodNum;
-            if ($newNum > $nowgoodNum){//¤£¯à¶W¹L°Ó«~³Ì¤j®w¦s
+            if ($newNum > $nowgoodNum){//ä¸èƒ½è¶…éŽå•†å“æœ€å¤§åº«å­˜
                 return false;
             }
             $sql = "update details set purNum = ? where orderID=? and goodID = ?";
@@ -74,14 +58,14 @@ function add_Cart($clientID, $shopID, $goodID) {
             mysqli_stmt_bind_param($stmt, "iii", $newNum, $orderID, $goodID);
             mysqli_stmt_execute($stmt);
         } else {
-            // °Ó«~¤£¦s¦b¡A·s¼W¤@­ÓÁÊª«¨®¶µ¥Ø
+            // å•†å“ä¸å­˜åœ¨ï¼Œæ–°å¢žä¸€å€‹è³¼ç‰©è»Šé …ç›®
             $sql = "insert into details (orderID, goodID, purNum) values (?, ?, ?)";
             $stmt = mysqli_prepare($db, $sql);
             mysqli_stmt_bind_param($stmt, "iii", $orderID, $goodID, $goodNum);
             mysqli_stmt_execute($stmt);
         }
     } else {
-        // ¨S¦³¸Ó°Ó®aªº­q³æ¡A«Ø¥ß·s­q³æ
+        // æ²’æœ‰è©²å•†å®¶çš„è¨‚å–®ï¼Œå»ºç«‹æ–°è¨‚å–®
         $orderID = createOrder($clientID, $shopID);
         $sql = "insert into details (orderID, goodID, purNum) values (?, ?, ?)";
         $stmt = mysqli_prepare($db, $sql);
@@ -92,17 +76,61 @@ function add_Cart($clientID, $shopID, $goodID) {
     return true;
 }
 
-function get_goodNum($goodID) {
+// å­˜è³¼ç‰©è»Šä¸­åˆªé™¤ä¸€å€‹å•†å“
+function del_Cart($detailID, $clientID, $goodID) {
     global $db;
-    $sql = "SELECT goodNum FROM goods WHERE goodID = ?";
+    $goodNum = 1;
+    $orderID = checkOrder($clientID, $goodID);
+    $nowNum = checkNum($orderID, $goodID);
+
+    if ($nowNum > 1) {
+        // å•†å“å·²å­˜åœ¨ï¼Œå°‡å…¶æ•¸é‡æ¸›ä¸€
+        $newNum = $nowNum - $goodNum;
+        $sql = "update details set purNum = ? where goodID = ? and detailID = ?";
+        $stmt = mysqli_prepare($db, $sql);
+        mysqli_stmt_bind_param($stmt, "iii", $newNum, $goodID, $detailID);
+        mysqli_stmt_execute($stmt);
+    } else if ($nowNum == 1) {
+        // å•†å“ä¸å­˜åœ¨ï¼Œåˆªé™¤è³¼ç‰©è»Šé …ç›®
+        $sql = "delete from details where detailID=?";
+        $stmt = mysqli_prepare($db, $sql);
+        mysqli_stmt_bind_param($stmt, "i", $detailID);
+        mysqli_stmt_execute($stmt);
+
+        // æª¢æŸ¥æ˜¯å¦ç‚ºå®¢æˆ¶å•†å®¶é–“æœ€å¾Œä¸€å€‹å•†å“
+        $count = count_details($orderID);
+
+        if ($count == 0) {
+            deleteOrder($orderID);
+        }
+    }
+
+    return true;
+}
+
+// æª¢æŸ¥è¨‚å–®å…§æœ‰å¹¾ç­†
+function count_details($orderID) {
+    global $db;
+    $sql = "SELECT COUNT(*) as count FROM details WHERE orderID = ?";
     $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $goodID);
+    mysqli_stmt_bind_param($stmt, "i", $orderID);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $row = mysqli_fetch_assoc($result);
-    return $row['goodNum'];
+
+    return $row['count'];
 }
-// ÀË¬d«È¤á¬O§_¤w¸g¦³¸Ó°Ó®aªº­q³æ
+
+// åˆªé™¤è¨‚å–®
+function deleteOrder($orderID) {
+    global $db;
+    $sql = "delete from orders where orderID = ?";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $orderID);
+    mysqli_stmt_execute($stmt);
+}
+
+// æª¢æŸ¥å®¢æˆ¶æ˜¯å¦å·²ç¶“æœ‰è©²å•†å®¶çš„è¨‚å–®
 function checkOrder($clientID, $shopID) {
     global $db;
     $sql = "select orderID from orders where clientID=? and shopID=? and orderStatus = 0";
@@ -119,7 +147,7 @@ function checkOrder($clientID, $shopID) {
     }
 }
 
-// «Ø¥ß·sªº­q³æ
+// å»ºç«‹æ–°çš„è¨‚å–®
 function createOrder($clientID, $shopID) {
     global $db;
     
@@ -128,65 +156,75 @@ function createOrder($clientID, $shopID) {
     mysqli_stmt_bind_param($stmt, "ii", $clientID, $shopID);
     mysqli_stmt_execute($stmt);
 
-    // ¦^¶ÇorderID
+    // å›žå‚³orderID
     return mysqli_insert_id($db);
 }
 
-
-function del_Cart($detailID, $clientID, $goodID) {
+// æª¢æŸ¥å•†å“åº«å­˜é‡
+function get_goodNum($goodID) {
     global $db;
-    $goodNum = 1;
-    $orderID = checkOrder($clientID, $goodID);
-    $nowNum = checkNum($orderID, $goodID);
-
-    if ($nowNum > 1) {
-        // °Ó«~¤w¦s¦b¡A±N¨ä¼Æ¶q´î¤@
-        $newNum = $nowNum - $goodNum;
-        $sql = "update details set purNum = ? where goodID = ? and detailID = ?";
-        $stmt = mysqli_prepare($db, $sql);
-        mysqli_stmt_bind_param($stmt, "iii", $newNum, $goodID, $detailID);
-        mysqli_stmt_execute($stmt);
-    } else if ($nowNum == 1) {
-        // °Ó«~¤£¦s¦b¡A§R°£ÁÊª«¨®¶µ¥Ø
-        $sql = "delete from details where detailID=?";
-        $stmt = mysqli_prepare($db, $sql);
-        mysqli_stmt_bind_param($stmt, "i", $detailID);
-        mysqli_stmt_execute($stmt);
-
-        // ÀË¬d¬O§_¬°«È¤á°Ó®a¶¡³Ì«á¤@­Ó°Ó«~
-        $count = count_details($orderID);
-
-        if ($count == 0) {
-            deleteOrder($orderID);
-        }
-    }
-
-    return true;
-}
-
-// ÀË¬d­q³æ¤º¦³´Xµ§
-function count_details($orderID) {
-    global $db;
-    $sql = "SELECT COUNT(*) as count FROM details WHERE orderID = ?";
+    $sql = "select goodNum FROM goods WHERE goodID = ?";
     $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $orderID);
+    mysqli_stmt_bind_param($stmt, "i", $goodID);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $row = mysqli_fetch_assoc($result);
-
-    return $row['count'];
+    return $row['goodNum'];
 }
 
-// §R°£­q³æ
-function deleteOrder($orderID) {
+// ç¢ºèªç›®å‰æ•¸é‡
+function checkNum($orderID, $goodID){
     global $db;
-    $sql = "delete from orders where orderID = ?";
-    $stmt = mysqli_prepare($db, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $orderID);
-    mysqli_stmt_execute($stmt);
+    $sql = "select * from details where orderID=? and goodID=?";
+    $stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "ii", $orderID, $goodID);
+    mysqli_stmt_execute($stmt); // åŸ·è¡ŒSQL
+    $result = mysqli_stmt_get_result($stmt); // å–å¾—æŸ¥è©¢çµæžœ
+    
+    // æª¢æŸ¥æ˜¯å¦æœ‰ç¬¦åˆæ¢ä»¶çš„è³‡æ–™
+    if ($row = mysqli_fetch_assoc($result)) {
+        $nowNum = $row['purNum'];
+        return $nowNum;
+    } else {
+        return -1;  // æ²’æœ‰ç¬¦åˆæ¢ä»¶çš„è³‡æ–™
+    }
 }
 
+//æŸ¥çœ‹è¨‚å–®
+function get_OrderList($clientID){
+	global $db;
+	$sql = "select * from orders,shops where clientID=? and orderStatus > 0 and orders.shopID=shops.shopID;";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $clientID);
+	mysqli_stmt_execute($stmt); //åŸ·è¡ŒSQL
+	$result = mysqli_stmt_get_result($stmt); //å–å¾—æŸ¥è©¢çµæžœ
 
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; //å°‡æ­¤ç­†è³‡æ–™æ–°å¢žåˆ°é™£åˆ—ä¸­
+	}
+	return $rows;
+}
+
+//è³¼ç‰©è»Šæ¸…å–®
+function get_CartList($clientID) {
+	global $db;
+	$sql = "SELECT detailID,orders.orderID, details.goodID, goods.goodName, goods.goodPrice, details.purNum, orders.shopID,shops.shopName
+    FROM orders JOIN details ON orders.orderID = details.orderID JOIN goods ON details.goodID = goods.goodID JOIN shops ON shops.shopID = orders.shopID
+    WHERE orders.orderStatus = 0 AND orders.clientID =?";
+	$stmt = mysqli_prepare($db, $sql); 
+    mysqli_stmt_bind_param($stmt, "i", $clientID);
+	mysqli_stmt_execute($stmt); //åŸ·è¡ŒSQL
+	$result = mysqli_stmt_get_result($stmt); //å–å¾—æŸ¥è©¢çµæžœ
+
+	$rows = array();
+	while($r = mysqli_fetch_assoc($result)) {
+		$rows[] = $r; //å°‡æ­¤ç­†è³‡æ–™æ–°å¢žåˆ°é™£åˆ—ä¸­
+	}
+	return $rows;
+}
+
+// è¨ˆç®—ç¸½é‡‘é¡
 function get_Total($clientID) {
     global $db;
 
@@ -199,30 +237,33 @@ function get_Total($clientID) {
     $result = mysqli_stmt_get_result($stmt);
     
     $row = mysqli_fetch_assoc($result);
-    return $row['total']; //½T«O¤£·|§ì¨ì¨ä¥L­È
+    return $row['total']; //ç¢ºä¿ä¸æœƒæŠ“åˆ°å…¶ä»–å€¼
 }
+
+// çµå¸³æ›´æ–°è¨‚å–®ç‹€æ…‹
 function send_Order($clientID) {
     global $db;
     
-    // §ó·s­q³æª¬ºA
+    // æ›´æ–°è¨‚å–®ç‹€æ…‹
     $sql = "update orders set orderStatus = 1 where clientID = ? and orderStatus = 0;";
     $stmt = mysqli_prepare($db, $sql);
     mysqli_stmt_bind_param($stmt, "i", $clientID);
     mysqli_stmt_execute($stmt);
     
-    // ¨ú±o­q³æ¤¤ªº°Ó«~¤Î¼Æ¶q
+    // å–å¾—è¨‚å–®ä¸­çš„å•†å“åŠæ•¸é‡
     $sql2 = "select goodID, purNum from details where orderID in (select orderID from orders where clientID = ? and orderStatus = 1)";
     $stmt2 = mysqli_prepare($db, $sql2);
     mysqli_stmt_bind_param($stmt2, "i", $clientID);
     mysqli_stmt_execute($stmt2);
     $result = mysqli_stmt_get_result($stmt2);
     
-    // ¨Ì§Ç§ó·s®w¦s
+    // ä¾åºæ›´æ–°åº«å­˜
     while ($row = mysqli_fetch_assoc($result)) {
         update_goodNum($row['goodID'], $row['purNum']);
     }
 }
-// §ó·s®w¦s
+
+// æ›´æ–°åº«å­˜
 function update_goodNum($goodID, $purNum) {
     global $db;
     
@@ -232,23 +273,7 @@ function update_goodNum($goodID, $purNum) {
     mysqli_stmt_execute($stmt);
 }
 
-//¬d¬Ý­q³æ
-function get_OrderList($clientID){
-	global $db;
-	$sql = "select * from orders where clientID=? and orderStatus > 0;";
-	$stmt = mysqli_prepare($db, $sql); 
-    mysqli_stmt_bind_param($stmt, "i", $clientID);
-	mysqli_stmt_execute($stmt); //°õ¦æSQL
-	$result = mysqli_stmt_get_result($stmt); //¨ú±o¬d¸ßµ²ªG
-
-	$rows = array();
-	while($r = mysqli_fetch_assoc($result)) {
-		$rows[] = $r; //±N¦¹µ§¸ê®Æ·s¼W¨ì°}¦C¤¤
-	}
-	return $rows;
-}
-
-//µ¹¤©µû»ù
+// å¯çµ¦äºˆè©•åƒ¹è€…
 function feedback_OrderList($clientID){
 	global $db;
 	$sql = "select * from orders where orderStatus=5 and clientID=?;";
@@ -261,6 +286,8 @@ function feedback_OrderList($clientID){
 	}
 	return $rows;
 }
+
+// è©•åƒ¹è¨‚å–®
 function feedback_Order($feedback,$orderID){ 
 	global $db;
 	$sql = "update orders set feedback=? where orderID=?;";
@@ -276,13 +303,13 @@ function feedback_Order($feedback,$orderID){
     $row = mysqli_fetch_assoc($result);
     
     $shopID = $row['shopID'];
-    update_ShopStar($shopID);//§ó·sµû»ù
+    update_ShopStar($shopID);//æ›´æ–°è©•åƒ¹
 }
 
-//§ó·s°Ó®aµû»ù
+// æ›´æ–°å•†å®¶è©•åƒ¹
 function update_ShopStar($shopID) {
     global $db;
-    //­pºâ¥­§¡
+    //è¨ˆç®—å¹³å‡
     $sql = "select avg(feedback) as avgfeedback from orders where shopID = ?";
     $stmt = mysqli_prepare($db, $sql);
     mysqli_stmt_bind_param($stmt, "i", $shopID);
@@ -290,10 +317,11 @@ function update_ShopStar($shopID) {
     $result = mysqli_stmt_get_result($stmt);
     $row = mysqli_fetch_assoc($result);
     $avg = $row['avgfeedback'];
-    //§ó·sµû»ù
+    //æ›´æ–°è©•åƒ¹
     $sql2 = "update shops set shopStar = ? where shopID = ?";
     $stmt2 = mysqli_prepare($db, $sql2);
     mysqli_stmt_bind_param($stmt2, "ii", $avg, $shopID);
     mysqli_stmt_execute($stmt2);
 }
+
 ?>
