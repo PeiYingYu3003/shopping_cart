@@ -64,7 +64,7 @@ function del_Good($id) {
 // 確認有哪些訂單
 function confirm_OrderList($shopID){
 	global $db;
-	$sql = "select * from orders,clients where shopID=? and orders.clientID=clients.clientID;";
+	$sql = "select * from orders,clients where orderStatus>0 and shopID=? and orders.clientID=clients.clientID;";
 	$stmt = mysqli_prepare($db, $sql); 
     mysqli_stmt_bind_param($stmt, "i", $shopID);
 	mysqli_stmt_execute($stmt); //執行SQL
