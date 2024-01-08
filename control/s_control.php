@@ -44,8 +44,6 @@ switch ($act) {
                 $order['orderStatus'] = '已送達';
             else if($originalStatus===6)
                 $order['orderStatus'] = '已完成並評價';
-            else 
-                $order['orderStatus'] = '異常狀況';
         }
         echo json_encode($Order);
         return;  
