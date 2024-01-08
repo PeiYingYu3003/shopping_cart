@@ -10,18 +10,67 @@
     <h1>購物車(登入)</h1>
     <hr/>
     <div id="main">
-        <h1>登入</h1>
-        帳號: <input type="text" v-model="acc"/> <br/>
-        密碼: <input type="text" v-model="pwd" /> <br/><br/>
-        <button @click="logIn">登入</button> <button @click="signUp">註冊</button>
+        <div v-if="UI==='main'">
+            <h1>登入</h1>
+            帳號: <input type="text" v-model="acc"/> <br/>
+            密碼: <input type="text" v-model="pwd" /> <br/><br/>
+            <button @click="logIn">登入</button> <button @click="signUp">註冊</button>
+                
+        </div>
+        
+        <div v-if="UI==='newAccount-1'">
+            <h1>註冊</h1>
+            角色:
+            <select v-model="selectedRole">
+                <option value="0">顧客</option>
+                <option value="1">店家</option>
+            </select> <br/><br/>
+            <button @click="nextStep">下一步</button>
+        </div>
+
+        <div v-if="UI==='newAccount-2'">
+            <div v-if="selectedRole === '0'">
+                <!-- 顧客註冊表單 -->
+                <h1>建立一個新的顧客帳號</h1>
+                帳號: <input type="text" v-model="newClient.account"/> <br/>
+                密碼: <input type="text" v-model="newClient.password" /> <br/>
+                姓名: <input type="text" v-model="newClient.ClinetName"/> <br/>
+                住址: <input type="text" v-model="newClient.ClinetAddress"/> <br/>
+                <br/><button @click="back">返回</button> <button @click="newAccount(newClient)">確認申請</button>
+            </div>
+            <div v-else-if="selectedRole === '1'">
+                <!-- 店家註冊表單 -->
+                <h1>建立一個新的商家帳號</h1>
+                帳號: <input type="text" v-model="newShop.account"/> <br/>
+                密碼: <input type="text" v-model="newShop.password" /> <br/>
+                姓名: <input type="text" v-model="newShop.ShopName"/> <br/>
+                <br/><button @click="back">返回</button> <button @click="newAccount(newShop)">確認申請</button>
+            </div>
+            
+        </div>
     </div>
 
     <script>
         const app = Vue.createApp({
             data() {
                 return {
+                    UI:'main',
+                    selectedRole:'',
                     acc: '',
-                    pwd: ''
+                    pwd: '',
+                    newClient: {
+                        role: '0',
+                        account: '',
+                        password: '',
+                        ClinetName: '',
+                        ClinetAddress: ''
+                    },
+                    newShop: {
+                        role: '1',
+                        account: '',
+                        password: '',
+                        ShopName: ''
+                    }
                 };
             },
             methods: {
@@ -30,7 +79,7 @@
                     mydat.append("acc", this.acc);
                     mydat.append("pwd", this.pwd);
 
-                    const url = "../control/login_control.php";
+                    const url = "../control/login_control.php?act=login";
                     fetch(url, {
                         method: 'POST',
                         body: mydat
@@ -56,10 +105,51 @@
                     });
                 },
                 signUp() {
-                    // 在這裡實現註冊的相應邏輯
-                    // 你可以導向使用者到註冊頁面或執行相應的註冊操作
-                }
-            }
+                    this.setUI('newAccount-1');
+                },
+                setUI: function(page) { // 畫面切換
+				    this.UI=page;
+			    },
+                nextStep:function(){
+                    console.log(this.selectedRole);
+                    if (this.selectedRole === '')
+                        alert("請選擇要申請的角色！")
+                    else
+                        this.setUI('newAccount-2');
+                },
+                back:function(){ // 返回首頁
+                    const that=this;
+                    that.setUI('main');
+			    },
+                newAccount() {
+                    const that=this;
+                    let mydat = new FormData();
+
+                    if (this.selectedRole === '0') {
+                        mydat.append("acc", JSON.stringify(this.newClient.account));
+                        mydat.append("pwd", JSON.stringify(this.newClient.password));
+                        mydat.append("name", JSON.stringify(this.newClient.ClinetName));
+                        mydat.append("addr", JSON.stringify(this.newClient.ClinetAddress));
+                    } else {
+                        mydat.append("acc", JSON.stringify(this.newShop.account));
+                        mydat.append("pwd", JSON.stringify(this.newShop.password));
+                        mydat.append("name", JSON.stringify(this.newShop.ShopName));
+                    }
+
+                    let url="../control/login_control.php?act=newAccount&role="+this.selectedRole;
+
+                    fetch(url,{
+                        method: 'POST',
+                        body: mydat // 將表單物件放入fetch的body屬性
+                    })
+                    .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                    .then(function(data){ 
+                        console.log(data);
+                        alert("成功新建帳號！");
+                        that.back();
+                    })
+                }      
+            },
         }).mount("#main");
     </script>
 </body>
